@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import Todolist from "./Todolist";
 import Footer from "./Footer";
 import Header from "./Header";
+import './style.css';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

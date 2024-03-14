@@ -92,7 +92,7 @@ class TodoApp extends React.Component {
                     {this.state.items && this.state.items.map((item, index) => (
                         <li key={item.id}>
                             <input type="checkbox" onClick={() => this.toggleTask(index)} checked={item.done} />
-                            <span className={item.done ? "done" : ""} onClick={() => {if (!!item.done) {this.toggleTask(index);}}} >{item.text} </span>
+                            <span className={item.done ? "done" : ""} onClick={() => {if (!item.done) {this.toggleTask(index);}}} >{item.text} </span>
                             <button onClick={() => this.deleteTask(index)} >Supprimer</button>
                             <button onClick={() => this.taskUp(index)} >↑</button>
                             <button onClick={() => this.taskDown(index)} >↓</button>
