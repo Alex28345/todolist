@@ -3,19 +3,22 @@ import React from 'react';
 class TodoApp extends React.Component {
     constructor(props) {
         super(props)
+        let todoList;
+        if(window.confirm('Voulez-vous charger les tâches sauvegardées ?')) {
+            todoList = localStorage.getItem('todoList') !== "" ? JSON.parse(localStorage.getItem('todoList')) : [];
+        } else {
+            todoList = [];
+        }
         this.state = {
-            inputValue: '',
-            items: [
-                { text: "Learn JavaScript", done: false },
-                { text: "Learn React", done: false },
-                { text: "Play around in JSFiddle", done: true },
-            ]
+            items: todoList,
+            searchValue: ''
         }
     }
 
+
     toggleTask(index) {
         const updatedItems = [...this.state.items];
-        updatedItems[index].done = !updatedItems[index].done;
+        updatedItems[index].isChecked = !updatedItems[index].isChecked;
         this.setState({ items: updatedItems });
     }
 
@@ -35,12 +38,9 @@ class TodoApp extends React.Component {
             updatedItems[index] = modifiedItem;
             this.setState({ items: updatedItems });
         }
-        this.setState({inputValue : ''});
     }
 
     taskDown(index) {
-        console.log(index)
-        console.log(this.state.items.length-1)
         if(index < this.state.items.length-1){
             const updatedItems = [...this.state.items];
             let modifiedItem = updatedItems[index+1];
@@ -48,59 +48,58 @@ class TodoApp extends React.Component {
             updatedItems[index] = modifiedItem;
             this.setState({ items: updatedItems });
         }
-        this.setState({inputValue : ''});
     }
 
     addTask() {
-        if(this.state.inputValue !== ''){
-            this.setState({items:[
-                    {text: this.state.inputValue, done:false},...this.state.items,
-                ]})
-        }
-        this.setState({inputValue : ''});
-    }
-
-    handleKeyDown(event) {
-        if (event.key === 'Enter') {
-            this.addTask();
+        let newTaskTitle = window.prompt('Entrez le titre de la nouvelle tâche :');
+        if(newTaskTitle !== null && newTaskTitle !== ''){
+            this.setState(prevState => ({
+                items: [
+                    {Title: newTaskTitle, isChecked:false},
+                    ...prevState.items,
+                ],
+            }));
         }
     }
 
-    header() {
-        return (
-            <header className="App-header">
-                <h1>TODOLIST</h1>
-            </header>
-        );
+    registerTasks() {
+        localStorage.setItem('todoList', JSON.stringify(this.state.items));
     }
 
 
     render() {
         const nbTotal = this.state.items.length
-        const nbWait = this.state.items.filter((item) => {/*console.log("Loop",i,j);*/ return !!item.done}).length
+        const nbWait = this.state.items.filter((item) => {/*console.log("Loop",i,j);*/ return !!item.isChecked}).length
         return (
             <div>
-                <h2>Ajouter une tache:</h2>
+                <header>
+                    <h1>TODOLIST</h1>
+                    <p style={{opacity: this.state.searchValue.length >= 3 ? 0.5 : 1}}>Il y a <b>{nbWait}</b> taches cochées sur <b>{nbTotal}</b> au total.</p>
+                </header>
+                <h2>Recherche:</h2>
                 <input  type="text"
-                        value={this.state.inputValue}
-                        onChange={e => this.setState({inputValue: e.target.value})}
-                        onKeyDown={(event) => this.handleKeyDown(event)}
+                        value={this.state.searchValue}
+                        onChange={e => this.setState({searchValue: e.target.value})}
+                        placeholder="Rechercher..."
                 />
-                <button onClick={() => {this.addTask()}}>+</button>
-                <h2>Todos:</h2>
+                <h2>Les tâches:</h2>
                 <ol>
-                    {this.state.items && this.state.items.map((item, index) => (
-                        <li key={item.id}>
-                            <input type="checkbox" onClick={() => this.toggleTask(index)} checked={item.done} />
-                            <span className={item.done ? "done" : ""} onClick={() => {if (!item.done) {this.toggleTask(index);}}} >{item.text} </span>
-                            <button onClick={() => this.deleteTask(index)} >Supprimer</button>
-                            <button onClick={() => this.taskUp(index)} >↑</button>
-                            <button onClick={() => this.taskDown(index)} >↓</button>
-
-                        </li>
-                    ))}
+                    {this.state.items && this.state.items
+                        .filter(item => this.state.searchValue.length >= 3 ? item.Title.toLowerCase().includes(this.state.searchValue.toLowerCase()) : true)
+                        .map((item, index) => (
+                            <li key={item.id}>
+                                <input type="checkbox" onClick={() => this.toggleTask(index)} checked={item.isChecked} />
+                                <span className={item.isChecked ? "isChecked" : ""} onClick={() => {if (!item.isChecked) {this.toggleTask(index);}}} >{item.Title} </span>
+                                <button onClick={() => this.deleteTask(index)} >Supprimer</button>
+                                <button onClick={() => this.taskUp(index)} >↑</button>
+                                <button onClick={() => this.taskDown(index)} >↓</button>
+                            </li>
+                        ))}
                 </ol>
-                <em style={{color:'blue'}}>Il y a <b>{nbWait}</b> taches cochées (sur <b>{nbTotal}</b> au total).</em>
+                <footer>
+                    <button onClick={() => {this.addTask()}}>ajouter</button>
+                    <button onClick={() => {this.registerTasks()}}>Enregistrer les taches</button>
+                </footer>
             </div>
         )
     }
