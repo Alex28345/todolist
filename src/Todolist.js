@@ -69,12 +69,14 @@ class TodoApp extends React.Component {
 
     render() {
         const nbTotal = this.state.items.length
-        const nbWait = this.state.items.filter((item) => {/*console.log("Loop",i,j);*/ return !!item.isChecked}).length
+        const nbChecked = this.state.items.filter((item) => {/*console.log("Loop",i,j);*/ return !!item.isChecked}).length
+        const progress = nbTotal > 0 ? (nbChecked / nbTotal) * 100 : 0;
         return (
             <div>
                 <header>
                     <h1>TODOLIST</h1>
-                    <p style={{opacity: this.state.searchValue.length >= 3 ? 0.5 : 1}}>Il y a <b>{nbWait}</b> taches cochées sur <b>{nbTotal}</b> au total.</p>
+                    <p style={{opacity: this.state.searchValue.length >= 3 ? 0.5 : 1}}>Il y a <b>{nbChecked}</b> taches cochées sur <b>{nbTotal}</b> au total.</p>
+                    <progress value={progress} max="100" style={{opacity: this.state.searchValue.length >= 3 ? 0.5 : 1}}></progress>
                 </header>
                 <h2>Recherche:</h2>
                 <input  type="text"
