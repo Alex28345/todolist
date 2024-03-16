@@ -23,7 +23,7 @@ class TodoApp extends React.Component {
     }
 
     deleteTask(index) {
-        if(window.confirm){
+        if(window.confirm('Voulez-vous vraiment supprimer cette tâche ?')){
             const updatedItems = [...this.state.items];
             updatedItems.splice(index, 1);
             this.setState({ items: updatedItems });
