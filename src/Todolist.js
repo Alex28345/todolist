@@ -14,7 +14,6 @@ class TodoApp extends React.Component {
         super(props)
         this.inputRef = React.createRef();
         let todoList;
-        console.log(localStorage.getItem('todoList'))
         if(localStorage.getItem('todoList') === null) {
             todoList = [];
         } else if(window.confirm('Voulez-vous charger les tâches sauvegardées ?')) {
@@ -116,7 +115,7 @@ class TodoApp extends React.Component {
     render() {
         const icons = ['Home', 'Work', 'Apple', 'Bug', 'Computer'];
         const nbTotal = this.state.items.length
-        const nbChecked = this.state.items.filter((item) => {/*console.log("Loop",i,j);*/ return !!item.isChecked}).length
+        const nbChecked = this.state.items.filter((item) => {return !!item.isChecked}).length
         const progress = nbTotal > 0 ? (nbChecked / nbTotal) * 100 : 0;
         return (
             <>
@@ -151,10 +150,9 @@ class TodoApp extends React.Component {
                                        this.handleSubmit();
                                    }
                                }}/>
-
                         <div className="icon-selection space-x-1">
-                            {icons.map(icon => (
-                                <button
+                            {icons.map((icon, index) => (
+                                <button key={index}
                                     className={this.state.selectedCategories.includes(icon) ? 'bg-blue-500 rounded-xl p-1' : 'p-1'}
                                     onClick={() => this.handleCategoryChange(icon)}
                                 >
