@@ -6,11 +6,13 @@ class Header extends React.Component {
 
 
         return (
-            <header>
-                <h1>TODOLIST</h1>
-                <p style={{opacity: searchValue.length >= 3 ? 0.5 : 1}}>Il y a <b>{nbChecked}</b> taches cochées sur <b>{nbTotal}</b> au total.</p>
-                <progress value={progress} max="100" style={{opacity: searchValue.length >= 3 ? 0.5 : 1}}></progress>
+            <header className="bg-gray-200 p-4">
+                <h1 className="text-3xl font-bold">TODOLIST</h1>
+                <p className={searchValue.length >= 3 ? "opacity-50" : ""}>Il y a <b>{nbChecked}</b> tâches cochées
+                    sur <b>{nbTotal}</b> au total.</p>
+                <progress value={progress} max="100" className={searchValue.length >= 3 ? "opacity-50" : ""}></progress>
             </header>
+
         );
     }
 }

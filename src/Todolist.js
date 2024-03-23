@@ -1,17 +1,24 @@
 import React from 'react';
 import Footer from "./Footer";
 import Header from "./Header";
-import {Box, Button, Modal} from "@mui/material";
+import {Modal} from "@mui/material";
+import CategoryIcon from "./CategoryIcon";
+import CategoryIcons from "./CategoryIcons";
 
 class TodoApp extends React.Component {
     closeModal = () => {
         this.setState({ isModalOpen: false })
+        this.setState({ selectedCategories: [] })
     }
     constructor(props) {
         super(props)
+        this.inputRef = React.createRef();
         let todoList;
-        if(window.confirm('Voulez-vous charger les tâches sauvegardées ?')) {
-            todoList = localStorage.getItem('todoList') !== "" ? JSON.parse(localStorage.getItem('todoList')) : [];
+        console.log(localStorage.getItem('todoList'))
+        if(localStorage.getItem('todoList') === null) {
+            todoList = [];
+        } else if(window.confirm('Voulez-vous charger les tâches sauvegardées ?')) {
+            todoList = (localStorage.getItem('todoList') !== "") ? JSON.parse(localStorage.getItem('todoList')) : [];
         } else {
             todoList = [];
         }
@@ -20,7 +27,8 @@ class TodoApp extends React.Component {
             items: todoList,
             searchValue: '',
             isModalOpen: false,
-            taskTitle: ''
+            taskTitle: '',
+            selectedCategories: [],
         }
         this.closeModal.bind(this)
     }
@@ -30,8 +38,22 @@ class TodoApp extends React.Component {
     }
 
     handleSubmit = () => {
-        this.addTask(this.state.taskTitle);
+        this.addTask(this.state.taskTitle, this.state.selectedCategories);
+        this.setState({ taskTitle: '' });
+        this.setState({ selectedIcon: '' });
         this.closeModal();
+    }
+
+    handleCategoryChange = (categoryName) => {
+        this.setState(prevState => {
+            if (prevState.selectedCategories.includes(categoryName)) {
+                // Si la catégorie est déjà sélectionnée, la supprimer
+                return { selectedCategories: prevState.selectedCategories.filter(category => category !== categoryName) };
+            } else {
+                // Sinon, ajouter la catégorie
+                return { selectedCategories: [...prevState.selectedCategories, categoryName] };
+            }
+        });
     }
 
     toggleTask(index) {
@@ -68,11 +90,11 @@ class TodoApp extends React.Component {
         }
     }
 
-    addTask(newTaskTitle) {
+    addTask(newTaskTitle, categories) {
         if(newTaskTitle !== null && newTaskTitle !== ''){
             this.setState(prevState => ({
                 items: [
-                    {Title: newTaskTitle, isChecked:false},
+                    {Title: newTaskTitle, isChecked:false, Categories: categories},
                     ...prevState.items,
                 ],
             }));
@@ -87,62 +109,71 @@ class TodoApp extends React.Component {
         this.setState({ isModalOpen: true });
     }
 
-    render() {
+    changeSearchValue(event) {
+        this.setState({searchValue: event.target.value});
+    }
 
-        const style = {
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: 400,
-            bgcolor: 'background.paper',
-            border: '2px solid #000',
-            boxShadow: 24,
-            p: 4,
-        };
+    render() {
+        const icons = ['Home', 'Work', 'Apple', 'Bug', 'Computer'];
         const nbTotal = this.state.items.length
         const nbChecked = this.state.items.filter((item) => {/*console.log("Loop",i,j);*/ return !!item.isChecked}).length
         const progress = nbTotal > 0 ? (nbChecked / nbTotal) * 100 : 0;
         return (
-            <div>
+            <>
                 <Header nbTotal={nbTotal} nbChecked={nbChecked} progress={progress} searchValue={this.state.searchValue} />
-                <h2>Recherche:</h2>
-                <input  type="text"
-                        value={this.state.searchValue}
-                        onChange={e => this.setState({searchValue: e.target.value})}
-                        placeholder="Rechercher..."
-                />
-                <h2>Les tâches:</h2>
-                <ol>
-                    {this.state.items && this.state.items
-                        .filter(item => this.state.searchValue.length >= 3 ? item.Title.toLowerCase().includes(this.state.searchValue.toLowerCase()) : true)
-                        .map((item, index) => (
-                            <li key={item.id}>
-                                <input type="checkbox" onClick={() => this.toggleTask(index)} checked={item.isChecked} />
-                                <span className={item.isChecked ? "isChecked" : ""} onClick={() => {if (!item.isChecked) {this.toggleTask(index);}}} >{item.Title} </span>
-                                <button onClick={() => this.deleteTask(index)} >Supprimer</button>
-                                <button onClick={() => this.taskUp(index)} >↑</button>
-                                <button onClick={() => this.taskDown(index)} >↓</button>
-                            </li>
-                        ))}
-                </ol>
+                <div className="my-4">
+                    <h2 className="text-xl font-bold">Les tâches:</h2>
+                    <ol className="list-decimal list-inside">
+                        {this.state.items && this.state.items
+                            .filter(item => this.state.searchValue.length >= 3 ? item.Title.toLowerCase().includes(this.state.searchValue.toLowerCase()) : true)
+                            .map((item, index) => (
+                                <li key={index} className="flex items-center space-x-2 m-2">
+                                    <input type="checkbox" onChange={() => this.toggleTask(index)} checked={item.isChecked} />
+                                    <span className={"cursor-pointer" + (item.isChecked ? " line-through" : "")} onClick={() => { if (!item.isChecked) { this.toggleTask(index); } }}>{item.Title}</span>
+                                    <button className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600" onClick={() => this.deleteTask(index)}>Supprimer</button>
+                                    {index !== 0 && <button className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600" onClick={() => this.taskUp(index)}>↑</button>}
+                                    {index !== this.state.items.length - 1 && <button className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600" onClick={() => this.taskDown(index)}>↓</button>}
+                                    <CategoryIcons categories={item.Categories} />
+                                </li>
+                            ))}
+                    </ol>
+                </div>
                 <Modal
                     open={this.state.isModalOpen}
                     onClose={this.closeModal}
                 >
-                    <Box sx={style}>
-                        <input type="text" placeholder="Entrez le titre de la nouvelle tâche" onChange={this.handleInputChange}
-                        onKeyPress={event => {
-                            if (event.key === 'Enter') {
-                                this.handleSubmit();
-                            }
-                        }} />
-                        <Button onClick={this.handleSubmit}>Ajouter une tâche</Button>
-                    </Box>
+                    <div className="absolute bg-gray-400 bottom-[50%] translate-y-1/2 translate-x-1/2 right-[50%] p-5 w-1/3 flex flex-col items-center justify-center space-y-5">
+                        <input type="text" ref={this.inputRef} placeholder="Entrez le titre de la nouvelle tâche"
+                               className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-blue-400 mr-2 w-5/6"
+                               onChange={this.handleInputChange}
+                               onKeyPress={event => {
+                                   if (event.key === 'Enter') {
+                                       this.handleSubmit();
+                                   }
+                               }}/>
+
+                        <div className="icon-selection space-x-1">
+                            {icons.map(icon => (
+                                <button
+                                    className={this.state.selectedCategories.includes(icon) ? 'bg-blue-500 rounded-xl p-1' : 'p-1'}
+                                    onClick={() => this.handleCategoryChange(icon)}
+                                >
+                                    <CategoryIcon category={icon}/>
+                                </button>
+                            ))}
+                        </div>
+
+                        <button className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
+                                onClick={this.handleSubmit}>Ajouter une tâche
+                        </button>
+                    </div>
+
                 </Modal>
 
-                <Footer addTask={this.openModal.bind(this)} registerTasks={this.registerTasks.bind(this)}/>
-            </div>
+                <Footer addTask={this.openModal.bind(this)} registerTasks={this.registerTasks.bind(this)}
+                        changeValue={this.changeSearchValue.bind(this)} searchValue={this.state.searchValue}/>
+            </>
+
         )
     }
 }
